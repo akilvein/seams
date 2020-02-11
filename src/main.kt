@@ -9,16 +9,16 @@ import javax.swing.JPanel
 fun getSeam(picture: BufferedImagePicture) : Array<Int> {
     val distances = Array(picture.width) { DoubleArray(picture.height + 2) { Double.MAX_VALUE } }
 
-    class PixelNode(val x: Int, val y: Int) : Comparable<PixelNode> {
+    class PixelNode(val x: Int, val y: Int, val distance: Double) : Comparable<PixelNode> {
         override fun compareTo(other: PixelNode): Int {
-            return distances[x][y].compareTo(distances[other.x][other.y])
+            return distance.compareTo(other.distance)
         }
     }
 
     val preceding = Array(picture.width) { Array<PixelNode?>(picture.height + 2) { null } }
     val processed = Array(picture.width) { BooleanArray(picture.height + 2) { false } }
 
-    val source = PixelNode(0,0)
+    val source = PixelNode(0,0, 0.0)
     distances[0][0] = 0.0
     val q = PriorityQueue<PixelNode>(picture.width * picture.height)
     q.add(source)
@@ -35,7 +35,7 @@ fun getSeam(picture: BufferedImagePicture) : Array<Int> {
         if (newDistance < distances[x][y]) {
             distances[x][y] = newDistance
             preceding[x][y] = current
-            q.add(PixelNode(x, y))
+            q.add(PixelNode(x, y, newDistance))
         }
     }
 
@@ -74,7 +74,7 @@ fun getSeam(picture: BufferedImagePicture) : Array<Int> {
         processed[pixel.x][pixel.y] = true
 
         //right for top/bottom rows
-        if ((pixel.y == -1 || pixel.y == picture.height) && pixel.x < picture.width - 1) {
+        if ((pixel.y == 0 || pixel.y == picture.height) && pixel.x < picture.width - 1) {
             relaxPixel(pixel.x + 1, pixel.y, pixel)
         }
 
@@ -112,6 +112,7 @@ fun pictureWithSeam(filename: String): BufferedImagePicture {
 class ImagePanel : JPanel() {
     //private val image = BufferedImagePicture("dog.jpg").energyImage()
     private val image = pictureWithSeam("surf.png")
+    //private val image = pictureWithSeam("dog.jpg")
 
     init {
         preferredSize = Dimension(image.width, image.height)
