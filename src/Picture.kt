@@ -1,7 +1,10 @@
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
+import java.time.Duration
+import java.util.*
 import javax.imageio.ImageIO
+import kotlin.system.measureTimeMillis
 
 interface Picture {
     val height: Int
@@ -101,4 +104,42 @@ class BufferedImagePicture : Picture {
         val color = (energy / kotlin.math.sqrt(6.0)).toInt()
         Color(color, color, color)
     }
+
+    private fun decreaseWidth(): BufferedImagePicture {
+        val seam = getVerticalSeam()
+        return BufferedImagePicture(width - 1, height) {
+            x, y ->
+            if (x < seam[y]) {
+                get(x, y)
+            }
+            else {
+                get(x + 1, y)
+            }
+        }
+    }
+
+    fun measure(block: () -> Unit): String {
+        val duration = Duration.ofMillis(measureTimeMillis(block))
+
+        val min = duration.toMinutesPart()
+        val sec = duration.toSecondsPart()
+        val mil = duration.toMillisPart()
+
+        return "$min min. $sec sec. $mil ms."
+    }
+
+    fun resize(newWidth: Int): BufferedImagePicture {
+        var result = this
+
+        val duration = measure {
+            while (result.width >= newWidth) {
+                result = result.decreaseWidth()
+            }
+        }
+        println("resize from $width to $newWidth in $duration")
+
+        return result
+    }
+
+
 }
