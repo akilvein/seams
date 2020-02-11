@@ -74,7 +74,7 @@ fun getSeam(picture: BufferedImagePicture) : Array<Int> {
         processed[pixel.x][pixel.y] = true
 
         //right for top/bottom rows
-        if ((pixel.y == 0 || pixel.y == picture.height) && pixel.x < picture.width - 1) {
+        if ((pixel.y == 0 || pixel.y == picture.height + 1) && pixel.x < picture.width - 1) {
             relaxPixel(pixel.x + 1, pixel.y, pixel)
         }
 
