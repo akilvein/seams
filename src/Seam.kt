@@ -1,48 +1,83 @@
-import java.util.*
+private fun BufferedImagePicture.pixelIndex(x: Int, y: Int) = y * width + x
 
 fun BufferedImagePicture.getVerticalSeam() : Array<Int> {
-    val distances = Array(width) { DoubleArray(height + 2) { Double.MAX_VALUE } }
+    val graphSize = width * (height + 2)
+    val sink = pixelIndex(width - 1, height + 1)
+    val source = pixelIndex(0, 0)
 
-    class PixelNode(val x: Int, val y: Int, val distance: Double) : Comparable<PixelNode> {
-        override fun compareTo(other: PixelNode): Int {
-            return distance.compareTo(other.distance)
+    val distances = DoubleArray(graphSize) { Double.MAX_VALUE }
+    distances[pixelIndex(0, 0)] = 0.0
+
+    val preceding = IntArray(graphSize) { - 1}
+
+    val weights = DoubleArray(graphSize) {
+        val x = it % width
+        val y = it / width
+        when (y) {
+            0 -> 0.0
+            in (1 .. height) -> pixelEnergy(x, y - 1)
+            height + 1 -> 0.0
+            else -> throw IndexOutOfBoundsException("y must be in [0 .. ${height + 1}]")
         }
     }
 
-    val preceding = Array(width) { Array<PixelNode?>(height + 2) { null } }
-    val processed = Array(width) { BooleanArray(height + 2) { false } }
+    val q = IndexPriorityQueue<Double>(graphSize)
+    q.insert(source, 0.0)
 
-    val source = PixelNode(0,0, 0.0)
-    distances[0][0] = 0.0
-    val q = PriorityQueue<PixelNode>(width * height)
-    q.add(source)
-
-    fun weight(x: Int, y: Int): Double = when (y) {
-        0 -> 0.0
-        in (1 .. height) -> pixelEnergy(x, y - 1)
-        height + 1 -> 0.0
-        else -> throw IndexOutOfBoundsException("y must be in [0 .. ${height + 1}]")
+    fun relaxPixel(index: Int, current: Int) {
+        val newDistance = distances[current] + weights[index]
+        if (newDistance < distances[index]) {
+            distances[index] = newDistance
+            preceding[index] = current
+            if (q.contains(index)) {
+                q.decreaseKey(index, newDistance)
+            }
+            else {
+                q.insert(index, newDistance)
+            }
+        }
     }
 
-    fun relaxPixel(x: Int, y: Int, current: PixelNode) {
-        val newDistance = distances[current.x][current.y] + weight(x, y)
-        if (newDistance < distances[x][y]) {
-            distances[x][y] = newDistance
-            preceding[x][y] = current
-            q.add(PixelNode(x, y, newDistance))
+    while (!q.isEmpty()) {
+        val index = q.delMin();
+
+        if (index == sink) {
+            // woohoo!
+            break
+        }
+
+        val y = index / width
+        val x = index % width
+
+        //right for top/bottom rows
+        if ((y == 0 || y == height + 1) && x < width - 1) {
+            relaxPixel(index + 1, index)
+        }
+
+        //down
+        if (y <= height) {
+            relaxPixel(index + width, index)
+
+            // down-left
+            if (x > 0) {
+                relaxPixel(index + width - 1, index)
+            }
+
+            // down-right
+            if (x < width - 1) {
+                relaxPixel(index + width + 1, index)
+            }
         }
     }
 
     fun unwindPath(): Array<Int> {
         val result = Array(height) { -1 }
 
-        var x = width - 1
-        var y = height + 1
-
-        while (y > 0) {
-            val p = preceding[x][y]!!
-            x = p.x
-            y = p.y
+        var i = sink
+        while (i > width) {
+            i = preceding[i]
+            val y = i / width
+            val x = i % width
 
             if (y - 1 in result.indices) {
                 result[y - 1] = x
@@ -50,42 +85,6 @@ fun BufferedImagePicture.getVerticalSeam() : Array<Int> {
         }
 
         return result
-    }
-
-    while (q.isNotEmpty()) {
-        val pixel = q.poll()
-
-        // we can have duplicates in queue
-        if (processed[pixel.x][pixel.y]) {
-            continue
-        }
-
-        if (pixel.x == width - 1 && pixel.y == height + 1) {
-            // woohoo!
-            break
-        }
-
-        processed[pixel.x][pixel.y] = true
-
-        //right for top/bottom rows
-        if ((pixel.y == 0 || pixel.y == height + 1) && pixel.x < width - 1) {
-            relaxPixel(pixel.x + 1, pixel.y, pixel)
-        }
-
-        //down
-        if (pixel.y <= height) {
-            relaxPixel(pixel.x, pixel.y + 1, pixel)
-
-            // down-left
-            if (pixel.x > 0) {
-                relaxPixel(pixel.x - 1, pixel.y + 1, pixel)
-            }
-
-            // down-right
-            if (pixel.x < width - 1) {
-                relaxPixel(pixel.x + 1, pixel.y + 1, pixel)
-            }
-        }
     }
 
     return unwindPath()

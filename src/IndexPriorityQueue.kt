@@ -3,13 +3,7 @@ import java.util.*
 class IndexPriorityQueue<Key : Comparable<Key>>(private val capacity : Int) {
     private val pq = IntArray(capacity + 1) { 0 } // binary heap using 1-based indexing
     private val qp = IntArray(capacity + 1) { -1 } // inverse of pq - qp[pq[i]] = pq[qp[i]] = i
-    private val keys = mutableListOf<Key?>()
-
-    init {
-        repeat(capacity + 1) {
-            keys.add(null)
-        }
-    }
+    private val keys = MutableList<Key?>(capacity + 1) { null }
 
     private var size : Int = 0
 
