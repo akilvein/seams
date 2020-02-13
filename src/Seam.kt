@@ -1,6 +1,6 @@
 private fun BufferedImagePicture.pixelIndex(x: Int, y: Int) = y * width + x
 
-fun BufferedImagePicture.getVerticalSeam() : Array<Int> {
+fun BufferedImagePicture.getVerticalSeamByDijkstra() : Array<Int> {
     val graphSize = width * (height + 2)
     val sink = pixelIndex(width - 1, height + 1)
     val source = pixelIndex(0, 0)
@@ -89,3 +89,47 @@ fun BufferedImagePicture.getVerticalSeam() : Array<Int> {
 
     return unwindPath()
 }
+
+
+fun BufferedImagePicture.getVerticalSeam() : Array<Int> {
+    val imageSize = width * height
+    val preceding = IntArray(imageSize) { - 1}
+
+    val weights = DoubleArray(imageSize) { index ->
+        val x = index % width
+        val y = index / width
+        pixelEnergy(x, y)
+    }
+
+    for (y in height - 2 downTo 0) {
+        for (x in  0 until width) {
+            val index = y * width + x
+
+            val bottomIndex = index + width
+            var minIndex = bottomIndex
+            if (x > 0 && weights[bottomIndex - 1] < weights[minIndex]) {
+                minIndex = bottomIndex - 1
+            }
+            if (x < width - 1 && weights[bottomIndex + 1] < weights[minIndex]) {
+                minIndex = bottomIndex + 1
+            }
+
+            weights[index] += weights[minIndex]
+            preceding[index] = minIndex
+        }
+    }
+
+    var minIndex = 0
+    for (index in 0 until width) {
+        if (weights[index] < weights[minIndex]) {
+            minIndex = index
+        }
+    }
+
+    return Array(height) {
+        val current = minIndex
+        minIndex = preceding[minIndex]
+        current % width
+    }
+}
+
