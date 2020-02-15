@@ -1,4 +1,4 @@
-package stage1
+package stage2
 
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -9,6 +9,12 @@ import javax.imageio.ImageIO
 class Image {
     private val image: BufferedImage
 
+    val width: Int
+        get() = image.width
+
+    val height: Int
+        get() = image.height
+
     constructor(width: Int, height: Int, init: (Int, Int) -> Color) {
         image = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
         for (y in 0 until height) {
@@ -16,6 +22,11 @@ class Image {
                 set(x, y, init(x, y))
             }
         }
+    }
+
+    constructor(filename: String) {
+        val file = File(filename)
+        image = ImageIO.read(file)
     }
 
     operator fun get(x: Int, y: Int): Color {
@@ -46,17 +57,27 @@ class Image {
 }
 
 
+
 fun main(args: Array<String>) {
-    val width = 10
-    val height = 10
-    Image(width, height) {
-            x, y ->
-        if (x == y || width - x == y + 1) {
-            Color.RED
+    var inFilename = "surf.png"
+    var outFilename = "surf_resized.png"
+
+    for (i in args.indices) {
+        when(args[i]) {
+            "-in" -> inFilename = args[i + 1]
+            "-out" -> outFilename = args[i + 1]
         }
-        else {
-            Color.BLACK
+    }
+
+    val image = Image(inFilename)
+    for (x in 0 until image.width) {
+        for (y in 0 until image.height) {
+            if (x == y || image.width - x == y + 1) {
+                image[x, y] = Color.RED
+            }
         }
-    }.save("out.png")
+    }
+
+    image.save(outFilename)
 }
 
