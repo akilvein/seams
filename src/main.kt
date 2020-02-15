@@ -1,10 +1,6 @@
 import java.awt.Color
-import java.awt.Component
 import java.awt.Dimension
 import java.awt.Graphics
-import java.awt.event.ComponentAdapter
-import java.awt.event.ComponentEvent
-import java.util.*
 import javax.swing.JFrame
 import javax.swing.JPanel
 
@@ -42,10 +38,11 @@ fun showFrameWithImage(image: BufferedImagePicture) {
 }
 
 fun main() {
-    var image = BufferedImagePicture("surf.png")
+    var image = BufferedImagePicture("boats.jpg")
     showFrameWithImage(image)
 
     showFrameWithImage(image.resize(image.width - 100))
+    //image.resize(image.width - 100)
 
 
     /*

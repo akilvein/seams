@@ -2,7 +2,6 @@ import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
 import java.time.Duration
-import java.util.*
 import javax.imageio.ImageIO
 import kotlin.system.measureTimeMillis
 
