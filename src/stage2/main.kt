@@ -54,13 +54,18 @@ class Image {
         val extension = file.extension
         ImageIO.write(image, extension, file);
     }
+
+    fun getNegative() = Image(width, height) { x, y ->
+        val c = get(x, y)
+        Color(255 - c.red, 255 - c.green, 255 - c.blue)
+    }
 }
 
 
 
 fun main(args: Array<String>) {
-    var inFilename = "surf.png"
-    var outFilename = "surf_resized.png"
+    var inFilename = "amsterdam.png"
+    var outFilename = "amsterdam_negative.png"
 
     for (i in args.indices) {
         when(args[i]) {
@@ -69,15 +74,6 @@ fun main(args: Array<String>) {
         }
     }
 
-    val image = Image(inFilename)
-    for (x in 0 until image.width) {
-        for (y in 0 until image.height) {
-            if (x == y || image.width - x == y + 1) {
-                image[x, y] = Color.RED
-            }
-        }
-    }
-
-    image.save(outFilename)
+    Image(inFilename).getNegative().save(outFilename)
 }
 
