@@ -1,8 +1,10 @@
 package stage1
 
 import java.awt.Color
+import java.awt.Graphics
 import java.awt.image.BufferedImage
 import java.io.File
+import java.util.*
 import javax.imageio.ImageIO
 
 
@@ -28,6 +30,12 @@ class Image {
         return Color(image.getRGB(x, y))
     }
 
+    open val width: Int
+        get() = image.width
+
+    open val height: Int
+        get() = image.height
+
     operator fun set(x: Int, y: Int, color: Color) {
         if (x < 0 || x >= image.width) {
             throw IndexOutOfBoundsException("x must be between 0 and ${image.width - 1}")
@@ -43,20 +51,28 @@ class Image {
         val extension = file.extension
         ImageIO.write(image, extension, file);
     }
+
+    val graphics: Graphics
+        get() = image.graphics
 }
 
 
 fun main(args: Array<String>) {
-    val width = 10
-    val height = 10
-    Image(width, height) {
-            x, y ->
-        if (x == y || width - x == y + 1) {
-            Color.RED
-        }
-        else {
-            Color.BLACK
-        }
-    }.save("out.png")
+    val scanner = Scanner(System.`in`)
+    println("Enter rectangle width:")
+    val width = scanner.nextInt()
+    println("Enter rectangle height:")
+    val height = scanner.nextInt()
+    println("Enter output image name:")
+    val filename = scanner.next()
+
+    val image = Image(width, height) { _, _ -> Color.BLACK }
+
+    val g = image.graphics
+    g.color = Color.RED
+    g.drawLine(0, 0, image.width - 1, image.height - 1)
+    g.drawLine(0, image.height - 1, image.width - 1, 0)
+
+    image.save(filename)
 }
 
